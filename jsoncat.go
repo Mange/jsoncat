@@ -20,16 +20,28 @@ func ReadFiles(filenames []string) ([]interface{}, error) {
 	data := make([]interface{}, len(filenames))
 
 	for index, filename := range filenames {
-		file, err := os.Open(filename)
-		check(err)
-		doc, err := ReadJson(file)
+		doc, err := readFile(filename)
 		if err != nil {
-			return nil, errors.New(fmt.Sprint(filename, ": ", err.Error()))
+			return nil, err
 		}
 		data[index] = doc
 	}
 
 	return data, nil
+}
+
+func readFile(filename string) (interface{}, error) {
+	file, err := os.Open(filename)
+	defer file.Close()
+	check(err)
+
+	doc, err := ReadJson(file)
+
+	if err == nil {
+		return doc, nil
+	} else {
+		return nil, errors.New(fmt.Sprint(filename, ": ", err.Error()))
+	}
 }
 
 func ReadJson(r io.Reader) (interface{}, error) {
