@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -14,24 +16,27 @@ func check(err error) {
 	}
 }
 
-func ReadFiles(filenames []string) []interface{} {
+func ReadFiles(filenames []string) ([]interface{}, error) {
 	data := make([]interface{}, len(filenames))
 
 	for index, filename := range filenames {
 		file, err := os.Open(filename)
 		check(err)
-		data[index] = ReadJson(file)
+		doc, err := ReadJson(file)
+		if err != nil {
+			return nil, errors.New(fmt.Sprint(filename, ": ", err.Error()))
+		}
+		data[index] = doc
 	}
 
-	return data
+	return data, nil
 }
 
-func ReadJson(r io.Reader) interface{} {
+func ReadJson(r io.Reader) (interface{}, error) {
 	var doc interface{}
 	decoder := json.NewDecoder(r)
 	err := decoder.Decode(&doc)
-	check(err)
-	return doc
+	return doc, err
 }
 
 func WriteJsonDocuments(docs []interface{}, w io.Writer) {
@@ -58,7 +63,14 @@ func main() {
 	flag.BoolVar(&merge, "merge", false, "Merge files")
 	flag.Parse()
 
-	data := ReadFiles(flag.Args())
+	data, err := ReadFiles(flag.Args())
+
+	if err != nil {
+		os.Stderr.WriteString(err.Error())
+		os.Stderr.WriteString("\n")
+		os.Exit(1)
+	}
+
 	if merge {
 		data, err := MergeJson(data)
 		if err == nil {

@@ -54,6 +54,6 @@ assertEqual "$(./jsoncat --merge tests/objects/a.json tests/objects/b.json)" '{"
 assertFailure "./jsoncat --merge tests/objects/a.json tests/arrays/123.json" "incompatible type"
 
 # Test reading invalid files
-# TODO
+assertFailure "./jsoncat tests/bare/true.json tests/broken.json" "tests/broken.json: invalid"
 
 echo "SUCCESS" > /dev/stderr
