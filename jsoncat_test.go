@@ -39,3 +39,23 @@ func TestMergeJson_arrays_of_different_types(t *testing.T) {
 
 	expectEqual(t, "MergeJson", in, expected, MergeJson(in))
 }
+
+func TestMergeJson_objects(t *testing.T) {
+	in := make([]interface{}, 2)
+	in[0] = parseJson("{\"a\": 1, \"b\": 5}")
+	in[1] = parseJson("{\"a\": 2}")
+
+	expected := parseJson("{\"a\": 2, \"b\": 5}")
+
+	expectEqual(t, "MergeJson", in, expected, MergeJson(in))
+}
+
+func TestMergeJson_objects_will_not_deep_merge(t *testing.T) {
+	in := make([]interface{}, 2)
+	in[0] = parseJson("{\"a\": [1, 2, 3]}")
+	in[1] = parseJson("{\"a\": [3, 4, 5]}")
+
+	expected := parseJson("{\"a\": [3, 4, 5]}")
+
+	expectEqual(t, "MergeJson", in, expected, MergeJson(in))
+}
