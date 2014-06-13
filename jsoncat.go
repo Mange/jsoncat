@@ -2,15 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"os"
+	"flag"
 	"io"
 	"log"
-	"flag"
+	"os"
 )
 
 func check(err error) {
 	if err != nil {
-		log.Panic(err);
+		log.Panic(err)
 	}
 }
 
@@ -18,54 +18,54 @@ func ReadFiles(filenames []string) []interface{} {
 	data := make([]interface{}, len(filenames))
 
 	for index, filename := range filenames {
-		file, err := os.Open(filename);
-		check(err);
-		data[index] = ReadJson(file);
+		file, err := os.Open(filename)
+		check(err)
+		data[index] = ReadJson(file)
 	}
 
-	return data;
+	return data
 }
 
 func ReadJson(r io.Reader) interface{} {
-	var doc interface{};
-	decoder := json.NewDecoder(r);
-	err := decoder.Decode(&doc);
-	check(err);
-	return doc;
+	var doc interface{}
+	decoder := json.NewDecoder(r)
+	err := decoder.Decode(&doc)
+	check(err)
+	return doc
 }
 
 func WriteJsonDocuments(docs []interface{}, w io.Writer) {
-	var err error;
-	encoder := json.NewEncoder(w);
+	var err error
+	encoder := json.NewEncoder(w)
 	if len(docs) == 1 {
 		err = encoder.Encode(docs[0])
 	} else {
-		err = encoder.Encode(docs);
+		err = encoder.Encode(docs)
 	}
-	check(err);
+	check(err)
 }
 
 func WriteJsonDocument(doc interface{}, w io.Writer) {
-	var err error;
-	encoder := json.NewEncoder(w);
-	err = encoder.Encode(doc);
-	check(err);
+	var err error
+	encoder := json.NewEncoder(w)
+	err = encoder.Encode(doc)
+	check(err)
 }
 
 func MergeJson(docs []interface{}) interface{} {
-	return MergeJsonArrays(docs);
+	return MergeJsonArrays(docs)
 }
 
 func MergeJsonArrays(docs []interface{}) []interface{} {
-	totalElements := 0;
+	totalElements := 0
 
 	for _, doc := range docs {
-		totalElements += len(doc.([]interface{}));
+		totalElements += len(doc.([]interface{}))
 	}
 
-	array := make([]interface{}, totalElements);
+	array := make([]interface{}, totalElements)
 
-	combinedIndex := 0;
+	combinedIndex := 0
 	for _, doc := range docs {
 		for _, value := range doc.([]interface{}) {
 			array[combinedIndex] = value
@@ -73,16 +73,16 @@ func MergeJsonArrays(docs []interface{}) []interface{} {
 		}
 	}
 
-	return array;
+	return array
 }
 
 func main() {
-	var merge bool;
+	var merge bool
 
 	flag.BoolVar(&merge, "merge", false, "Merge files")
 	flag.Parse()
 
-	data := ReadFiles(flag.Args());
+	data := ReadFiles(flag.Args())
 	if merge {
 		WriteJsonDocument(MergeJson(data), os.Stdout)
 	} else {
