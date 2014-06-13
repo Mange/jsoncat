@@ -60,7 +60,14 @@ func main() {
 
 	data := ReadFiles(flag.Args())
 	if merge {
-		WriteJsonDocument(MergeJson(data), os.Stdout)
+		data, err := MergeJson(data)
+		if err == nil {
+			WriteJsonDocument(data, os.Stdout)
+		} else {
+			os.Stderr.WriteString(err.Error())
+			os.Stderr.WriteString("\n")
+			os.Exit(1)
+		}
 	} else {
 		WriteJsonDocuments(data, os.Stdout)
 	}
