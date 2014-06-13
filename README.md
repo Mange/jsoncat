@@ -42,9 +42,9 @@ The command will fail on incompatible types:
 
 ## Install
 
-*Option 1:* Set up [a proper `$GOPATH`][gopath] and then run `go install github.com/Mange/jsoncat`.
+**Option 1:** Set up [a proper `$GOPATH`][gopath] and then run `go install github.com/Mange/jsoncat`.
 
-*Option 2:* Download the source and run `go build && cp jsoncat ~/bin`.
+**Option 2:** Download the source and run `go build && cp jsoncat ~/bin`.
 
 ## Missing stuff
 
