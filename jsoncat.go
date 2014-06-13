@@ -16,32 +16,60 @@ func check(err error) {
 	}
 }
 
-func ReadFiles(filenames []string) ([]interface{}, error) {
-	data := make([]interface{}, len(filenames))
-
-	for index, filename := range filenames {
-		doc, err := readFile(filename)
-		if err != nil {
-			return nil, err
-		}
-		data[index] = doc
-	}
-
-	return data, nil
+type fileresult struct {
+	filename string
+	index    int
+	data     interface{}
+	err      error
 }
 
-func readFile(filename string) (interface{}, error) {
+func ReadFiles(filenames []string) ([]interface{}, []error) {
+	/*
+		Read files concurrently while making sure that the data is added to the
+		list in order.
+		We also need to collect every error and return it separately.
+	*/
+
+	total := len(filenames)
+	channel := make(chan fileresult, total)
+
+	for index := range filenames {
+		i := index
+		go readFile(filenames[i], i, channel)
+	}
+
+	data := make([]interface{}, total)
+	var errs []error
+	totalRead := 0
+
+	for result := range channel {
+		if result.err == nil {
+			data[result.index] = result.data
+		} else {
+			errs = append(errs, errors.New(fmt.Sprint(result.filename, ": ", result.err.Error())))
+		}
+
+		totalRead++
+
+		if totalRead >= total {
+			close(channel)
+		}
+	}
+
+	return data, errs
+}
+
+func readFile(filename string, index int, channel chan fileresult) {
 	file, err := os.Open(filename)
 	defer file.Close()
-	check(err)
+
+	if err != nil {
+		channel <- fileresult{filename, index, nil, err}
+		return
+	}
 
 	doc, err := ReadJson(file)
-
-	if err == nil {
-		return doc, nil
-	} else {
-		return nil, errors.New(fmt.Sprint(filename, ": ", err.Error()))
-	}
+	channel <- fileresult{filename, index, doc, err}
 }
 
 func ReadJson(r io.Reader) (interface{}, error) {
@@ -75,11 +103,13 @@ func main() {
 	flag.BoolVar(&merge, "merge", false, "Merge files")
 	flag.Parse()
 
-	data, err := ReadFiles(flag.Args())
+	data, errors := ReadFiles(flag.Args())
 
-	if err != nil {
-		os.Stderr.WriteString(err.Error())
-		os.Stderr.WriteString("\n")
+	if len(errors) > 0 {
+		for _, err := range errors {
+			os.Stderr.WriteString(err.Error())
+			os.Stderr.WriteString("\n")
+		}
 		os.Exit(1)
 	}
 
