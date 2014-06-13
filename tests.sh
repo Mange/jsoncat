@@ -2,7 +2,7 @@
 
 set -e
 
-go build
+go test
 
 assertEqual() {
   if [ "x$1" != "x$2" ]; then
